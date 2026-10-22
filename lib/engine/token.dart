@@ -1,5 +1,4 @@
 import 'quantity.dart';
-import 'segment.dart';
 import 'units.dart';
 
 enum Op {
@@ -55,11 +54,11 @@ final class OpToken extends Token {
 
 /// A whole value inserted at once: a previous result, memory recall or a
 /// history entry. Backspace removes it in one step.
+///
+/// It is shown with the current format options, so a change of precision
+/// or display unit updates it too.
 final class ValueToken extends Token {
-  const ValueToken(this.quantity, this.segments);
+  const ValueToken(this.quantity);
 
   final Quantity quantity;
-
-  /// How the value is shown in the entry line.
-  final List<Segment> segments;
 }

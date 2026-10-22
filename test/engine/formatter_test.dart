@@ -177,9 +177,11 @@ void main() {
         MarkSegment.inches(),
         SpaceSegment(),
         MarkSegment.unit('mm'),
+        SpaceSegment(),
+        EqualsSegment(),
         ErrorSegment(),
       ]),
-      '≈ 3\' 5/8" mmError',
+      '≈ 3\' 5/8" mm =Error',
     );
   });
 }

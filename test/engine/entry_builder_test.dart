@@ -1,5 +1,6 @@
 import 'package:easyadd/engine/entry_builder.dart';
 import 'package:easyadd/engine/evaluator.dart';
+import 'package:easyadd/engine/formatter.dart';
 import 'package:easyadd/engine/quantity.dart';
 import 'package:easyadd/engine/rational.dart';
 import 'package:easyadd/engine/segment.dart';
@@ -74,16 +75,23 @@ void main() {
     });
 
     test('a recalled value acts as one operand', () {
-      final value = ValueToken(Quantity.inches(Rational(30)), const [
-        NumberSegment('2'),
-        MarkSegment.feet(),
-        SpaceSegment(),
-        NumberSegment('6'),
-        MarkSegment.inches(),
-      ]);
+      final value = ValueToken(Quantity.inches(Rational(30)));
       final parsed = EntryBuilder.parse([value, ...keys('+ 6"')]);
       expect(segmentsText(parsed.segments), '2\' 6" + 6"');
       expect(Evaluator.evaluate(parsed), Quantity.inches(Rational(36)));
+    });
+
+    test('a recalled value is shown with the given options', () {
+      final value = ValueToken(Quantity.inches(Rational(60, 7)));
+      expect(segmentsText(EntryBuilder.parse([value]).segments), '≈ 8 9/16"');
+      expect(
+        segmentsText(
+          EntryBuilder.parse([
+            value,
+          ], const FormatOptions(precision: 8)).segments,
+        ),
+        '≈ 8 5/8"',
+      );
     });
   });
 
@@ -136,7 +144,7 @@ void main() {
     });
 
     test('anything after a recalled value except an operator', () {
-      final value = ValueToken(Quantity.inches(Rational(1)), const []);
+      final value = ValueToken(Quantity.inches(Rational(1)));
       expect(EntryBuilder.canAppend([value], const DigitToken(1)), isFalse);
       expect(EntryBuilder.canAppend([value], value), isFalse);
       expect(EntryBuilder.canAppend([value], const OpToken(Op.add)), isTrue);

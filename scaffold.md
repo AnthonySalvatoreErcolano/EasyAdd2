@@ -158,18 +158,28 @@ Correction: the table first listed `10' × 12' × 12' × 2` as an overflow, but 
 
 ---
 
-## Phase 3 — State (`lib/state/`)
+## Phase 3 — State (`lib/state/`, `lib/data/`)
 
-- [ ] `calc_state.dart` — an immutable state: tokens, committed expression, last result, error, memory, display mode, precision, and the selected area or volume unit.
-- [ ] `calc_controller.dart` — a Riverpod `Notifier<CalcState>` with one method per key: `pressDigit`, `pressDecimal`, `pressFraction`, `pressUnit`, `pressOp`, `equals`, `backspace`, `clear` (C, then AC), `memoryAdd/Sub/Recall/Clear`, and `useHistoryEntry`.
-- [ ] Backspace removes exactly one token, including one through a committed operator.
-- [ ] Repeat-equals: `2' + 3"`, then `=` `=` gives `2' 3"`, then `2' 6"`.
-- [ ] Typing a digit after `=` starts a new calculation. Typing an operator after `=` continues from the result.
-- [ ] `settings.dart` — precision, display mode, haptics on or off, bag yields, stair limits, and lumber nominal or actual.
-- [ ] `tool_controllers.dart` — one small notifier per tool screen, with the inputs and a computed result.
-- [ ] `lib/data/prefs_repository.dart` — saves settings, memory and history as JSON in `shared_preferences`, and writes the last result to the widget's shared storage (Phase 6).
+**Status: done (2026-10-22).** 219 tests pass in total, and every line of app code is covered except one.
 
-**Check:** controller tests that use only key sequences (no UI) cover every key, backspace through each token type, C vs AC, repeat-equals and memory.
+- [x] `calc_state.dart` — immutable `CalcState`: the tokens being typed, the `Evaluation` shown after `=` (expression, result or error, and the operation to repeat), memory, and history (newest first, max 50). `display(options)` gives the blade's two lines: the expression (ending in `=` after equals), and the result or a live preview once an operator is typed.
+- [x] `calc_controller.dart` — a Riverpod `Notifier` with one method per key: `pressDigit`, `pressDecimal`, `pressFraction`, `pressUnit`, `pressOp`, `equals`, `backspace`, `clear`, `memoryAdd/Subtract/Recall/Clear`, `useHistoryEntry`, `clearHistory`, plus `canPress(token)` so the UI can disable keys.
+- [x] Behavior:
+  - Backspace removes one key press at a time, including operators, decimal points, and a recalled value (removed whole). **After `=`, backspace brings the expression back for editing.**
+  - Repeat-equals: `2' + 3"` then `=` `=` gives `2' 3"`, then `2' 6"`. It follows precedence: `2 + 3 × 4 = =` gives 14, then 56.
+  - A digit, fraction or unit after `=` starts a new calculation. An operator continues from the result, at full precision (`5' ÷ 7 = × 7 =` gives exactly `5' 0"`).
+  - A second operator in a row replaces the first.
+  - `C` clears the number typed after an operator. `AC` clears everything except memory. The key's label switches between the two.
+  - Errors show `Error`. A digit starts fresh, and operators are disabled.
+  - Memory adds and subtracts the result, or the value being typed. A value of a different kind (an area into a length memory) is ignored.
+  - History saves every calculation that has an operator. Tapping an entry inserts its result as one value.
+- [x] Recalled values (results, memory, history) keep their exact value and are shown with the current precision and units.
+- [x] `settings.dart` + `settings_controller.dart` — precision, length display, area and volume units, haptics, bag sizes, stair code limits, and lumber sizing. `update((s) => s.copyWith(...))` saves immediately.
+- [x] `tool_forms.dart` — one form per tool (`toolFormProvider(ToolKind)`). Each field is typed with the calculator keys, so `10' 6"` or `8' + 4"` works. A plain number uses the field's default unit: feet for slab length, width and column height and board length; inches for everything else. Results update live (`concreteResultProvider`, `stairsResultProvider`, `boardFeetResultProvider`, `convertValueProvider`) and are empty until the inputs they need are valid. Defaults: 10% waste, 1 pour, 7 3/4" max riser, 10" tread, and a 2×6 × 8' board.
+- [x] `lib/data/prefs_repository.dart` + `json_codec.dart` — save settings, memory and history as JSON, versioned keys. Damaged or old data loads as defaults instead of crashing, and settings keep every field that is still valid.
+- [ ] Writing the last result for the home-screen widget moves to Phase 6, where the widget is built.
+
+**Check:** passed. Controller tests use only key sequences and cover every key, backspace through each token type, C vs AC, repeat-equals, errors, memory and history.
 
 ---
 

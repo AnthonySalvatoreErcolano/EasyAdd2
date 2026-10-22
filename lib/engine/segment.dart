@@ -61,6 +61,14 @@ final class OperatorSegment extends Segment {
   String get text => op.symbol;
 }
 
+/// Ends an evaluated expression: `1' + 2" =`.
+final class EqualsSegment extends Segment {
+  const EqualsSegment();
+
+  @override
+  String get text => '=';
+}
+
 /// Shown before a result that was rounded for display.
 final class ApproxSegment extends Segment {
   const ApproxSegment();

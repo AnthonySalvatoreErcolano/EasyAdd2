@@ -1,3 +1,4 @@
+import 'formatter.dart';
 import 'quantity.dart';
 import 'rational.dart';
 import 'segment.dart';
@@ -54,10 +55,14 @@ abstract final class EntryBuilder {
   static const maxDigits = 9;
 
   /// Throws [FormatException] when the tokens are not a valid entry.
-  static ParsedExpression parse(List<Token> tokens) {
+  /// [options] sets how recalled values ([ValueToken]) are shown.
+  static ParsedExpression parse(
+    List<Token> tokens, [
+    FormatOptions options = const FormatOptions(),
+  ]) {
     final operands = <Operand>[];
     final operators = <Op>[];
-    var current = _OperandBuilder();
+    var current = _OperandBuilder(options);
 
     for (final token in tokens) {
       if (token is OpToken) {
@@ -66,7 +71,7 @@ abstract final class EntryBuilder {
         }
         operands.add(current.build());
         operators.add(token.op);
-        current = _OperandBuilder();
+        current = _OperandBuilder(options);
       } else {
         current.add(token);
       }
@@ -96,6 +101,9 @@ final class _Part {
 }
 
 final class _OperandBuilder {
+  _OperandBuilder(this._options);
+
+  final FormatOptions _options;
   final List<_Part> _parts = [];
   String _digits = '';
   Rational? _fraction;
@@ -153,7 +161,12 @@ final class _OperandBuilder {
 
   Operand build() {
     final value = _value;
-    if (value != null) return Operand(value.quantity, value.segments);
+    if (value != null) {
+      return Operand(
+        value.quantity,
+        Formatter.format(value.quantity, _options).segments,
+      );
+    }
 
     final segments = <Segment>[];
     var inches = Rational.zero;
