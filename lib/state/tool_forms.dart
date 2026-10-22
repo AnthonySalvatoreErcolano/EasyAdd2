@@ -161,6 +161,7 @@ final class ToolFormState {
     required this.entries,
     required this.active,
     this.choices = const {},
+    this.editing = true,
   });
 
   final ToolKind tool;
@@ -169,6 +170,13 @@ final class ToolFormState {
   /// The field the keypad types into.
   final String active;
   final Map<String, String> choices;
+
+  /// Whether the keypad is showing. Done hides it so the full result shows;
+  /// tapping a field brings it back.
+  final bool editing;
+
+  /// Whether the selected field is the last one, so Next becomes Done.
+  bool get onLastField => fields.last.id == active;
 
   List<ToolField> get fields => ToolFields.visible(tool, choices);
 
@@ -201,11 +209,13 @@ final class ToolFormState {
     Map<String, List<Token>>? entries,
     String? active,
     Map<String, String>? choices,
+    bool? editing,
   }) => ToolFormState(
     tool: tool,
     entries: entries ?? this.entries,
     active: active ?? this.active,
     choices: choices ?? this.choices,
+    editing: editing ?? this.editing,
   );
 
   static Quantity? _evaluate(List<Token> tokens) {
@@ -245,7 +255,27 @@ class ToolFormController extends Notifier<ToolFormState> {
     );
   }
 
-  void select(ToolField field) => state = state.copyWith(active: field.id);
+  void select(ToolField field) =>
+      state = state.copyWith(active: field.id, editing: true);
+
+  /// Moves the keypad to the next field. On the last field, hides the
+  /// keypad instead.
+  void selectNext() {
+    if (state.onLastField) {
+      done();
+      return;
+    }
+    final fields = state.fields;
+    final i = fields.indexWhere((f) => f.id == state.active);
+    state = state.copyWith(active: fields[i + 1].id);
+  }
+
+  /// Hides the keypad.
+  void done() => state = state.copyWith(editing: false);
+
+  /// The field the keypad types into.
+  ToolField get activeField =>
+      state.fields.firstWhere((f) => f.id == state.active);
 
   bool canPress(Token token) {
     final tokens = state.entries[state.active] ?? const [];

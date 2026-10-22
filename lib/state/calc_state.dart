@@ -109,8 +109,8 @@ final class CalcState {
       );
     }
     final parsed = EntryBuilder.parse(tokens, options);
-    // Preview only once there is something to combine.
-    final preview = parsed.operators.isEmpty ? null : _tryEvaluate(tokens);
+    // Preview only once there are two values to combine.
+    final preview = parsed.operands.length < 2 ? null : _tryEvaluate(tokens);
     return CalcDisplay(
       expression: parsed.segments,
       result: preview == null ? null : Formatter.format(preview, options),

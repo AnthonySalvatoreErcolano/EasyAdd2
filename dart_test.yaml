@@ -1,0 +1,4 @@
+tags:
+  # Screenshot tests. Fonts render slightly differently on each OS, so CI
+  # (Linux) skips them; run them on a Mac with `flutter test --tags golden`.
+  golden:

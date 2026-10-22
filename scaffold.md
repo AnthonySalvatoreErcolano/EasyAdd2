@@ -185,23 +185,26 @@ Correction: the table first listed `10' × 12' × 12' × 2` as an overflow, but 
 
 ## Phase 4 — UI (`lib/ui/`)
 
-- [ ] `theme/colors.dart` — tape yellow `#FEC517` (matches the icon), blade shadow `#E0A800`, ink black `#121212`, case graphite `#1E2023`, key steel `#2E3236` (pressed `#3C4146`), stud red `#D7262E`, chalk white `#F2F2EE`.
-- [ ] `theme/typography.dart` — Inter with tabular figures. The result is weight 700 and the expression weight 500.
-- [ ] `widgets/stacked_fraction.dart` — the numerator raised, the denominator lowered, both at about 60% size, with a slanted bar. Never use Unicode fraction characters.
-- [ ] `widgets/measurement_text.dart` — renders formatter segments: whole numbers, `StackedFraction`, smaller `'`/`"` marks, a red `'`, and unit words such as "sq ft". It shrinks to fit and never wraps.
-- [ ] `widgets/blade_display.dart` — the yellow blade with inch ticks painted by a `CustomPainter`, the expression line, the result line, and a decimal readout. Tapping the result's unit cycles the display mode (ft-in, in, decimal ft, metric; or sq ft, sq yd, m² for area).
-- [ ] `widgets/key_button.dart` — the digit, fraction, operator and utility styles. Pressing scales the key to 96% for 80 ms and plays a light haptic. Includes VoiceOver labels, such as "three eighths".
-- [ ] `widgets/fraction_strip.dart` — 1/8 to 7/8 plus a `16ths` toggle that swaps in the odd sixteenths.
-- [ ] `widgets/keypad.dart` — the 4 × 5 grid: `AC ⌫ ft in / 7 8 9 ÷ / 4 5 6 × / 1 2 3 − / 0 . = +`. Long-pressing `in` offers mm, cm and m.
-- [ ] `widgets/memory_row.dart` — MC, MR, M+, M− and a history icon.
-- [ ] `calculator_screen.dart` — puts it all together. Keys are at least 64 pt tall on an iPhone SE.
-- [ ] `sheets/history_sheet.dart` and `sheets/settings_sheet.dart`.
-- [ ] `tools/tools_screen.dart` — cards for Concrete, Stairs, Board Feet and Convert.
-- [ ] `tools/concrete_screen.dart`, `stairs_screen.dart`, `board_feet_screen.dart`, `convert_screen.dart` — each input field opens a compact tape-measure keypad (the same widgets) instead of the system keyboard, so feet and fractions can be entered. Results use `MeasurementText`. The stairs screen includes a simple side-view drawing of the stairs, painted with a `CustomPainter`.
-- [ ] Navigation: a bottom bar with two tabs, **Calculator** and **Tools**. On iPad, the history tape is a permanent side panel.
-- [ ] Golden tests: the blade with `11 15/16"`, `−1' 0"`, `120 sq ft`, a long expression and `Error`, at iPhone SE and 6.9" sizes, plus each tool screen with sample results.
+**Status: done (2026-10-22), pending your hands-on check.** 258 tests pass. 23 screenshot tests cover iPhone SE, 6.9" and iPad sizes, and the app runs on the iPhone SE simulator.
 
-**Check:** the goldens are approved, the widget tests pass, and the app is usable one-handed on an iPhone SE simulator.
+- [x] `theme/colors.dart`, `theme/typography.dart` — tape yellow `#FEC517`, graphite case, steel keys, stud red, chalk white. Inter with tabular figures throughout.
+- [x] `widgets/stacked_fraction.dart` — raised numerator, fraction slash, baseline denominator at 60% size. VoiceOver reads "three eighths".
+- [x] `widgets/measurement_text.dart` — renders display segments: stacked fractions, prime marks (′ ″) with a red feet mark, small unit words, dim ≈ and operators, red `Error`. Shrinks to fit and never wraps.
+- [x] `widgets/tape_ticks.dart` + `widgets/blade_display.dart` — the yellow blade with painted 1/16" graduations, inch numbers and a red "1F" foot marker. It shows the expression, the result (or a dimmed live preview, or `0` when empty), the exact decimal inches, and an "M" badge when memory is set. **Tap the result to cycle units** (ft-in → in → decimal ft → mm → cm → m; sq ft → sq yd → m² → sq in; cu ft → cu yd → m³ → cu in). **Hold it to copy.**
+- [x] `widgets/key_button.dart` — digit, fraction (yellow outline), unit, operator (yellow) and utility styles. Keys shrink to 96% when pressed and give a light haptic (can be turned off). A disabled key keeps its color and only dims its label.
+- [x] `widgets/fraction_strip.dart` — eighths plus a `16ths` toggle that swaps in the odd sixteenths for one tap. An `8ths` toggle switches back.
+- [x] `widgets/calc_keypad.dart` — the 4 × 5 grid. Hold `in` for mm, cm and m. The clear key reads C or AC.
+- [x] `widgets/memory_row.dart` — MC, MR, M+, M−, plus history and settings buttons.
+- [x] `calculator_screen.dart` — keys are about 66 pt tall on an iPhone SE and stop at about 84 pt on big phones; extra height goes to the blade (max 320 pt). On iPad (width 700 pt and up), history stays open beside the calculator.
+- [x] `sheets/history_sheet.dart` — newest first. Tap an entry to reuse its result; Clear empties the list.
+- [x] `sheets/settings_sheet.dart` — precision (1/2 to 1/64), length, area and volume display, lumber sizing, concrete bag yields, stair code limits, key vibration, reset, and the version number.
+- [x] `tools/tools_screen.dart` + `tools/tool_widgets.dart` — the tools list, and a shared tool layout: choice bar, field rows (the selected field has a yellow outline and scrolls into view), a result card, and a compact keypad (fractions, digits, ft, in, +, ⌫, Next). Hold ⌫ to clear a field; hold `in` for metric. Fraction and unit keys turn off for count and number fields.
+  - **Small-screen fix:** on an SE the result card sat under the keypad. Now a yellow answer bar is pinned above the keypad while you type, and on the last field **Next becomes Done**, which hides the keypad to show the full card. Tapping a field brings it back.
+- [x] `tools/concrete_screen.dart`, `stairs_screen.dart` (side-view drawing, red code warnings), `board_feet_screen.dart`, `convert_screen.dart` (all six length formats at once).
+- [x] `home_shell.dart` — bottom tabs, Calculator and Tools. Each keeps its state, and tapping Tools again returns to the list.
+- [x] Tests: 17 widget tests tap real keys by their VoiceOver labels (calculation, 16ths toggle, unit cycling, copy, history, settings, metric menu, tool forms, Next/Done, iPad layout). The 23 screenshot tests are tagged `golden`: run them on a Mac with `flutter test --tags golden`. CI skips them, because Linux renders fonts slightly differently.
+
+**Check:** screenshots reviewed at SE, 6.9" and iPad sizes; widget tests pass. **Still needed: you try it one-handed on a real iPhone** (Phase 5's device checklist).
 
 ---
 
