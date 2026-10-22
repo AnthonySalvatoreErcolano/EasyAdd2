@@ -125,27 +125,36 @@ Correction: the table first listed `10' × 12' × 12' × 2` as an overflow, but 
 
 ## Phase 2 — Tool engines (`lib/engine/tools/`, pure Dart, test-first)
 
-- [ ] `concrete.dart` — `ConcreteInput(length, width, depth, count, wastePct)` for slab or footing, or diameter × height for a round column. Outputs cu ft, cu yd, and 60 lb (0.45 cu ft each) and 80 lb (0.60 cu ft each) bag counts, rounded up. Bag yields are settings, so they can match the brand on the label.
-- [ ] `stairs.dart` — inputs are total rise, max riser (default 7 3/4"), and tread depth (default 10") or total run. Outputs:
-  - riser count = ⌈rise ÷ max riser⌉, and riser height = rise ÷ count
-  - tread count = risers − 1, and total run = treads × tread depth
-  - diagonal = √(rise² + run²), the one place a double is used, rounded back to 1/16"
-  - angle in degrees
-  - warnings when the riser is over 7 3/4" or the tread is under 10" (IRC R311.7.5 defaults, editable in settings)
-- [ ] `board_feet.dart` — `(thickness in × width in × length ft ÷ 12) × qty`, using nominal sizes by default with an option for actual sizes. An optional price per board foot gives a total.
+**Status: done (2026-10-22).** 128 tests pass in total, and every line in `lib/engine/tools/` is covered.
+
+- [x] `concrete.dart` — `ConcreteInput.slab(length, width, depth)` or `ConcreteInput.column(diameter, height)`, plus `count` (identical pours, such as 4 footings) and `wastePercent`. It returns the exact volume, the volume with waste, and whole-bag counts rounded up for each bag size. The default bags are 60 lb (0.45 cu ft) and 80 lb (0.60 cu ft), and both can be changed. A column uses π to 15 digits, so its result is shown as `≈`.
+- [x] `stairs.dart` — `StairInput(totalRise, maxRiser = 7 3/4", treadDepth = 10" or totalRun, codeMaxRiser, codeMinTread)`. Outputs:
+  - riser count = ⌈rise ÷ max riser⌉, and riser height = rise ÷ count (exact)
+  - tread count = risers − 1, and total run = treads × tread depth (or the tread is run ÷ treads when the run is given)
+  - diagonal = √(rise² + run²), the only part calculated with decimals, kept to a millionth of an inch
+  - angle = atan(riser ÷ tread). This is the stair's pitch, so 7 9/16" over 10" gives 37.1°. It is not the angle of the diagonal.
+  - warnings when the riser is over 7 3/4" or the tread is under 10" (IRC R311.7.5 defaults, adjustable)
+  - a single step (rise at or under the max riser) has no treads, run or angle
+- [x] `board_feet.dart` — `BoardInput(thickness, width, length, quantity, pricePerBoardFoot, sizing)`. Board feet = thickness × width × length (in inches) ÷ 144. Sizes are nominal by default. With `LumberSizing.actual`, a nominal size converts to its planed size: 1 → 3/4, 2 to 6 → ½ less, 7 and up → ¾ less (2×6 → 1½ × 5½).
+- [x] `Formatter.money` — `$1,234.50`, always 2 decimals.
+- [x] All three tools reject zero or negative sizes, a count or quantity below 1, negative waste and negative prices, so the UI can show "enter a size" instead of a wrong answer.
 
 ### Tool test table
 
 | Tool | Input | Expected |
 | --- | --- | --- |
-| Concrete | 10' × 12' slab, 4" deep, 0% waste | 40 cu ft, `1.48 cu yd`, 67 × 80 lb bags |
-| Concrete | same, 10% waste | 44 cu ft, `1.63 cu yd`, 74 × 80 lb bags |
+| Concrete | 10' × 12' slab, 4" deep, 0% waste | 40 cu ft, `≈ 1.48 cu yd`, 89 × 60 lb or 67 × 80 lb bags |
+| Concrete | same, 10% waste | 44 cu ft, `≈ 1.63 cu yd`, 98 × 60 lb or 74 × 80 lb bags |
+| Concrete | 3' × 3' × 4" slab (exactly 3 cu ft) | 5 × 80 lb bags, with no extra bag |
+| Concrete | 12" round column, 4' high | `≈ 3.14 cu ft` (exactly π), 6 × 80 lb bags |
 | Stairs | rise `8' 10"`, max riser 7 3/4", tread 10" | 14 risers at `≈ 7 9/16"`, 13 treads, run `10' 10"`, diagonal `≈ 13' 11 3/4"`, 37.1° |
+| Stairs | rise 7" | 1 riser, no treads, run, or angle |
 | Board feet | 2×6 × 8', qty 10 | 8 BF each, 80 BF total |
 | Board feet | same at $1.25/BF | $100.00 |
-| Board feet | 1×4 × 10', qty 1 | 3.33 BF |
+| Board feet | 1×4 × 10', qty 1 | `≈ 3.33` BF |
+| Board feet | 2×6 × 8', actual size | 5.5 BF |
 
-**Check:** `flutter test test/engine/tools` is all green.
+**Check:** passed. `flutter test` is green.
 
 ---
 

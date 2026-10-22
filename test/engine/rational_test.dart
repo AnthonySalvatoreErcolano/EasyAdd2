@@ -92,6 +92,17 @@ void main() {
       expect(Rational(-7, 3).round(), BigInt.from(-2));
     });
 
+    test('ceil goes up, including for negatives', () {
+      expect(Rational(7, 2).ceil(), BigInt.from(4));
+      expect(Rational(-7, 2).ceil(), BigInt.from(-3));
+      expect(Rational(4).ceil(), BigInt.from(4));
+    });
+
+    test('fromDouble keeps the requested places', () {
+      expect(Rational.fromDouble(0.125), Rational(1, 8));
+      expect(Rational.fromDouble(2 / 3, places: 3), Rational(667, 1000));
+    });
+
     test('roundTo snaps to the nearest step', () {
       final sixteenth = Rational(1, 16);
       expect(Rational(60, 7).roundTo(sixteenth), Rational(137, 16));

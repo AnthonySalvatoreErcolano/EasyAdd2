@@ -20,6 +20,16 @@ final class Rational implements Comparable<Rational> {
 
   factory Rational.fromBigInt(BigInt value) => Rational._(value, BigInt.one);
 
+  /// The nearest fraction with denominator 10^[places]. Only for results
+  /// that are irrational anyway, such as π or a square root.
+  factory Rational.fromDouble(double value, {int places = 9}) {
+    final scale = BigInt.from(10).pow(places);
+    return Rational.fromBigInts(
+      BigInt.from((value * scale.toDouble()).round()),
+      scale,
+    );
+  }
+
   /// Parses typed decimal text such as `12`, `12.` or `0.375`.
   factory Rational.parseDecimal(String text) {
     final dot = text.indexOf('.');
@@ -77,6 +87,9 @@ final class Rational implements Comparable<Rational> {
     final exact = quotient * denominator == numerator;
     return isNegative && !exact ? quotient - BigInt.one : quotient;
   }
+
+  /// The smallest integer that is not less than this value.
+  BigInt ceil() => -(-this).floor();
 
   /// The nearest integer. Exact halves round away from zero.
   BigInt round() {

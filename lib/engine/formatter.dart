@@ -147,21 +147,31 @@ abstract final class Formatter {
     ], approximate: approximate);
   }
 
-  /// [value] as decimal text with at most [places] decimals, trailing zeros
-  /// removed and thousands separated by commas. Also returns whether the
-  /// text was rounded.
-  static (String, bool) decimalText(Rational value, int places) {
+  /// [value] as decimal text with at most [places] decimals and thousands
+  /// separated by commas. Trailing zeros are removed unless [keepZeros].
+  /// Also returns whether the text was rounded.
+  static (String, bool) decimalText(
+    Rational value,
+    int places, {
+    bool keepZeros = false,
+  }) {
     final scale = BigInt.from(10).pow(places);
     final scaled = (value.abs() * Rational.fromBigInt(scale)).round();
     final approximate = Rational.fromBigInts(scaled, scale) != value.abs();
 
     final whole = _groupThousands((scaled ~/ scale).toString());
     var decimals = (scaled % scale).toString().padLeft(places, '0');
-    decimals = decimals.replaceFirst(RegExp(r'0+$'), '');
+    if (!keepZeros) decimals = decimals.replaceFirst(RegExp(r'0+$'), '');
 
     final sign = value.isNegative && scaled != BigInt.zero ? '−' : '';
     final text = decimals.isEmpty ? '$sign$whole' : '$sign$whole.$decimals';
     return (text, approximate);
+  }
+
+  /// Dollars and cents, such as `$1,234.50`. Rounds half-cents up.
+  static String money(Rational dollars) {
+    final (text, _) = decimalText(dollars, 2, keepZeros: true);
+    return text.startsWith('−') ? '−\$${text.substring(1)}' : '\$$text';
   }
 
   static String _groupThousands(String digits) {
