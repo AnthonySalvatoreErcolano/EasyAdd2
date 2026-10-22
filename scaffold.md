@@ -65,23 +65,29 @@ The fuller design rationale is in the plan doc: https://claude.ai/artifact/MxmoZ
 
 ## Phase 1 — Math engine (`lib/engine/`, pure Dart, test-first)
 
+**Status: done (2026-10-22).** 97 tests pass, including 10,000-case random checks. Every line of `lib/engine/` that runs at runtime is covered; the only uncovered lines are `const` constructors, which Dart builds before tests run.
+
 Every value is stored exactly, and rounding happens only when a result is displayed.
 
-- [ ] `rational.dart` — an immutable `Rational(num, den)` that is always reduced, with the sign on the numerator. It supports `+ − × ÷`, comparison, `roundTo(Rational step)` with ties away from zero, and `toDouble()`. It throws on a zero denominator.
-- [ ] `dimension.dart` — the length exponent: 0 = number, 1 = length, 2 = area, 3 = volume.
-- [ ] `quantity.dart` — `Quantity(Rational value, int dim)`. The base unit is inches, so area is in sq in and volume in cu in. Rules:
-  - `+` and `−`: the dimensions must match. A bare number next to a length counts as inches.
-  - `×`: dimensions add, up to 3. Above 3 the result is an error.
-  - `÷`: dimensions subtract. Length ÷ length gives a plain number; a negative dimension is an error.
-- [ ] `units.dart` — exact factors: ft = 12 in, yd = 36 in, mm = 5/127 in, cm = 50/127 in, m = 5000/127 in. Area and volume factors are the powers of these.
-- [ ] `token.dart` — `Digit(n)`, `DecimalPoint`, `Fraction(n, d)`, `UnitMark(unit)` (ft, in, mm, cm, m), `Op(op)`.
-- [ ] `entry_builder.dart` — turns one operand's tokens into a `Quantity` plus display segments for the UI (whole, fraction and unit pieces, so the UI can stack fractions). It also reports which keys are valid next, so invalid keys can be disabled.
-- [ ] `evaluator.dart` — a shunting-yard evaluator over operands and operators that returns a `Quantity` or a typed `CalcError` (divide by zero, unit mismatch, dimension overflow).
-- [ ] `formatter.dart`:
-  - Length: round to the precision, split into feet, inches and a fraction, reduce, carry, and add a sign. Output `3' 4 5/8"`, `7 1/2"`, `3' 0"` or `−1' 3"`. Other modes are inches-only, decimal feet and metric (mm, cm or m to 1 decimal place).
-  - Area and volume: a decimal to 2 places in the chosen unit, such as `120 sq ft` or `1.48 cu yd`.
-  - Numbers: up to 6 significant decimal places, with trailing zeros trimmed.
-  - Output is a list of segments, not a flat string, so the UI can render fractions.
+- [x] `rational.dart` — an immutable, always-reduced `Rational` backed by `BigInt`, so long chains of × and ÷ can't overflow. It supports `+ − × ÷`, comparison, `floor`, `round` and `roundTo(step)` with ties away from zero, `parseDecimal`, and `toDouble()`.
+- [x] `quantity.dart` — `Quantity(Rational value, int dimension)` (0 = number, 1 = length, 2 = area, 3 = volume; base unit inches), plus `CalcError` / `CalcException`. Rules:
+  - `+` and `−`: the dimensions must match. A plain number next to a length counts as inches.
+  - `×`: dimensions add, up to 3. Above 3 is `dimensionOverflow`.
+  - `÷`: dimensions subtract. Length ÷ length gives a plain number. A negative dimension is `invalidDivision`, and ÷ 0 is `divideByZero`.
+- [x] `units.dart` — `Unit` (ft, in, mm, cm, m) with exact inch factors (mm = 5/127 in); `AreaUnit` and `VolumeUnit` with exact factors; the `LengthDisplay` modes.
+- [x] `token.dart` — `DigitToken`, `DecimalPointToken`, `FractionToken`, `UnitToken`, `OpToken`, and `ValueToken`, which holds a whole recalled value (a previous result, memory or history) that backspace removes in one step.
+- [x] `segment.dart` — display pieces: `NumberSegment`, `FractionSegment`, `MarkSegment` (feet, inches or a unit word), `SpaceSegment`, `OperatorSegment`, `ApproxSegment` and `ErrorSegment`. The entry line and results both use them, so the UI can stack fractions.
+- [x] `entry_builder.dart` — parses the token list into operands and operators. `canAppend(tokens, key)` tells the UI which keys to disable. Entry rules:
+  - Digits alone are a plain number. A fraction or any unit makes the value a length.
+  - Pressing `ft` closes the feet part, and whatever comes next is inches. Pressing `in` or a metric unit closes the whole value.
+  - Two fraction keys in a row add together (1/2 then 1/8 gives 5/8). They can't add up to a whole inch.
+  - A metric value uses one unit, and can't be mixed with feet or fractions inside that one value. Metric and imperial values can still be added together.
+  - Each number is limited to 9 digits.
+- [x] `evaluator.dart` — × and ÷ are applied before + and −, working left to right. A trailing operator is ignored, so the live preview keeps working while you type.
+- [x] `formatter.dart`:
+  - Lengths: `3' 4 1/2"`, `7 1/2"`, `3' 0"`, `−1' 3"`, `1' 1/2"`, rounded to the precision setting with a `≈` mark. Other modes: inches only, decimal feet (4 places), mm (1 place), cm (2), m (3).
+  - Area and volume: 2 decimal places in the chosen unit, with `≈` when rounded.
+  - Plain numbers: up to 6 decimal places, trailing zeros trimmed, thousands separated with commas.
 
 ### Engine test table (each row is a unit test; all values worked by hand)
 
@@ -101,16 +107,19 @@ Every value is stored exactly, and rounding happens only when a result is displa
 | `2 + 3` | `5` |
 | `2 1/2" ÷ 0` | `Error` |
 | `10' × 12'` | `120 sq ft` |
-| `12' 6" × 10' 3"` | `128.13 sq ft` (exact 128.125) |
-| `3' × 4' × 6"` | `6 cu ft` / `0.22 cu yd` |
+| `12' 6" × 10' 3"` | `≈ 128.13 sq ft` (exact 128.125) |
+| `3' × 4' × 6"` | `6 cu ft` / `≈ 0.22 cu yd` |
 | `1' 2 1/2"` shown in metric | `368.3 mm` |
 | `1000 mm` shown in ft/in | `≈ 3' 3 3/8"` |
 | `1' + 10 cm` | `≈ 1' 3 15/16"` (exact 15.937…") |
-| `10' × 12' × 12' × 2` | `Error` (dimension overflow) |
+| `10' × 12' × 12' × 1'` | `Error` (dimension overflow) |
 
-- [ ] Property tests (plain Dart loop, 10,000 random cases): `a + b − b == a`; re-entering a formatted value gives the value back within half a precision step; results always land on the precision grid.
+Correction: the table first listed `10' × 12' × 12' × 2` as an overflow, but × 2 multiplies by a plain number, so the result stays a volume. The test uses `× 1'`.
 
-**Check:** `flutter test test/engine` is all green, with 100% line coverage of `lib/engine/`.
+- [x] Chained operations: `1' + 2' − 6"`, `2 × 3 + 4 × 5`, `2' × 3' + 1' × 4'` (gives 10 sq ft), and more.
+- [x] Property tests (10,000 random cases each, fixed seeds): `a + b − b == a`; `(a × n) ÷ n == a`; results land on the precision grid within half a step, at every precision; retyping a formatted result displays the same value.
+
+**Check:** passed. `flutter test` is green.
 
 ---
 
