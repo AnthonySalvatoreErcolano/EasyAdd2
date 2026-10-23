@@ -33,7 +33,12 @@ class _HomeShellState extends State<HomeShell> {
         child: IndexedStack(
           index: _tab,
           children: [
-            const CalculatorScreen(),
+            // The calculator is a fixed instrument layout; its text grows
+            // only a little with the system text size.
+            MediaQuery.withClampedTextScaling(
+              maxScaleFactor: 1.3,
+              child: const CalculatorScreen(),
+            ),
             Navigator(
               key: _toolsNavigator,
               onGenerateRoute: (_) =>
@@ -42,7 +47,10 @@ class _HomeShellState extends State<HomeShell> {
           ],
         ),
       ),
-      bottomNavigationBar: _TabBar(selected: _tab, onSelect: _select),
+      bottomNavigationBar: MediaQuery.withClampedTextScaling(
+        maxScaleFactor: 1.3,
+        child: _TabBar(selected: _tab, onSelect: _select),
+      ),
     );
   }
 }

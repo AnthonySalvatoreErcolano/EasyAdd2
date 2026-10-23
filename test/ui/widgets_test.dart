@@ -152,7 +152,7 @@ void main() {
       expect(c.read(toolFormProvider(ToolKind.concrete)).editing, isFalse);
       expect(find.text('Next'), findsNothing);
       // Tapping a field brings the keypad back.
-      await t.tap(find.text('Depth'));
+      await t.tap(find.textContaining('Depth'));
       await t.pumpAndSettle();
       expect(find.text('Next'), findsOneWidget);
     });
@@ -185,8 +185,8 @@ void main() {
       await openTool(t, 'Concrete');
       await t.tap(find.text('Round column'));
       await t.pumpAndSettle();
-      expect(find.text('Diameter'), findsOneWidget);
-      expect(find.text('Width'), findsNothing);
+      expect(find.textContaining('Diameter'), findsOneWidget);
+      expect(find.textContaining('Width'), findsNothing);
     });
 
     testWidgets('start over resets the form', (t) async {

@@ -130,6 +130,7 @@ class _HistoryTile extends StatelessWidget {
             MeasurementText(
               expression,
               style: AppText.style(15, color: AppColors.chalkDim),
+              feetColor: AppColors.tapeYellow,
             ),
             const SizedBox(height: 4),
             SizedBox(

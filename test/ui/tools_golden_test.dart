@@ -112,4 +112,15 @@ void main() {
     await t.tap(find.byTooltip('History'));
     await snap(t, 'sheet_history_se');
   });
+
+  testWidgets('concrete at double text size', (t) async {
+    t.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(t.platformDispatcher.clearTextScaleFactorTestValue);
+    final c = await openTool(t, 'Concrete');
+    fill(c, ToolKind.concrete, ToolFields.length, '10');
+    fill(c, ToolKind.concrete, ToolFields.width, '12');
+    fill(c, ToolKind.concrete, ToolFields.depth, '4');
+    c.read(toolFormProvider(ToolKind.concrete).notifier).done();
+    await snap(t, 'tool_concrete_text2x_se');
+  });
 }

@@ -11,6 +11,12 @@ abstract final class AppColors {
   static const utilitySteel = Color(0xFF474C53);
   static const utilitySteelPressed = Color(0xFF575D65);
   static const studRed = Color(0xFFD7262E);
+
+  /// Red for text on the yellow blade, dark enough to read (4.8:1).
+  static const studRedOnBlade = Color(0xFFA8121A);
+
+  /// Red for text on the dark case and sheets (5.3:1).
+  static const studRedOnDark = Color(0xFFFF6B6B);
   static const chalkWhite = Color(0xFFF2F2EE);
 
   /// Secondary text on the dark case.

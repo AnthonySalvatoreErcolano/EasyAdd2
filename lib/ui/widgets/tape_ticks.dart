@@ -10,7 +10,7 @@ class TapeTicksPainter extends CustomPainter {
 
   final double pixelsPerInch;
 
-  /// Slides the tape left, in pixels. Animated in Phase 5.
+  /// How far the tape has been pulled out, in pixels.
   final double shift;
 
   @override
@@ -20,9 +20,11 @@ class TapeTicksPainter extends CustomPainter {
       ..color = AppColors.inkBlack
       ..strokeCap = StrokeCap.butt;
     final step = pixelsPerInch / 16;
-    final count = ((size.width + shift) / step).ceil() + 1;
+    // Only the ticks on screen: from the first one past the left edge.
+    final first = (shift / step).floor().clamp(1, 1 << 30);
+    final last = ((size.width + shift) / step).ceil();
 
-    for (var i = 1; i < count; i++) {
+    for (var i = first; i <= last; i++) {
       final x = i * step - shift;
       if (x < 0) continue;
       final (length, width) = switch (i) {

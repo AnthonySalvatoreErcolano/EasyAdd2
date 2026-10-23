@@ -33,6 +33,7 @@ class BladeDisplay extends ConsumerWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final h = constraints.maxHeight;
+        final reduceMotion = MediaQuery.of(context).disableAnimations;
         final resultSize = (h * 0.34).clamp(40.0, 84.0);
         final expressionSize = (h * 0.1).clamp(18.0, 26.0);
         final tickHeight = (h * 0.19).clamp(22.0, 34.0);
@@ -54,10 +55,7 @@ class BladeDisplay extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                SizedBox(
-                  height: tickHeight,
-                  child: const CustomPaint(painter: TapeTicksPainter()),
-                ),
+                SizedBox(height: tickHeight, child: const _ExtendingTape()),
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
@@ -90,23 +88,46 @@ class BladeDisplay extends ConsumerWidget {
                                 : () => _copy(context, display.result!),
                             child: SizedBox(
                               height: resultSize * 1.2,
-                              child: MeasurementText(
-                                display.result?.segments ??
-                                    (calc.tokens.isEmpty
-                                        ? const [NumberSegment('0')]
-                                        : const []),
-                                style: AppText.style(
-                                  display.isFinal
-                                      ? resultSize
-                                      : resultSize * 0.8,
-                                  weight: FontWeight.w700,
-                                  color: display.isFinal
-                                      ? AppColors.inkBlack
-                                      : AppColors.inkBlack.withValues(
-                                          alpha: 0.5,
-                                        ),
+                              child: Semantics(
+                                liveRegion: display.isFinal,
+                                child: AnimatedSwitcher(
+                                  duration: reduceMotion
+                                      ? Duration.zero
+                                      : const Duration(milliseconds: 220),
+                                  switchInCurve: Curves.easeOutCubic,
+                                  transitionBuilder: _slideUp,
+                                  layoutBuilder: (current, previous) => Stack(
+                                    alignment: Alignment.centerRight,
+                                    children: [...previous, ?current],
+                                  ),
+                                  // Typing updates the preview in place; each
+                                  // `=` slides a new result up into view.
+                                  child: KeyedSubtree(
+                                    key: ValueKey<Object>(
+                                      display.isFinal
+                                          ? identityHashCode(calc.evaluation)
+                                          : 'preview',
+                                    ),
+                                    child: MeasurementText(
+                                      display.result?.segments ??
+                                          (calc.tokens.isEmpty
+                                              ? const [NumberSegment('0')]
+                                              : const []),
+                                      style: AppText.style(
+                                        display.isFinal
+                                            ? resultSize
+                                            : resultSize * 0.8,
+                                        weight: FontWeight.w700,
+                                        color: display.isFinal
+                                            ? AppColors.inkBlack
+                                            : AppColors.inkBlack.withValues(
+                                                alpha: 0.6,
+                                              ),
+                                      ),
+                                      dimColor: AppColors.inkDim,
+                                    ),
+                                  ),
                                 ),
-                                dimColor: AppColors.inkDim,
                               ),
                             ),
                           ),
@@ -130,6 +151,18 @@ class BladeDisplay extends ConsumerWidget {
       },
     );
   }
+
+  static Widget _slideUp(Widget child, Animation<double> animation) =>
+      FadeTransition(
+        opacity: animation,
+        child: SlideTransition(
+          position: Tween(
+            begin: const Offset(0, 0.35),
+            end: Offset.zero,
+          ).animate(animation),
+          child: child,
+        ),
+      );
 
   /// The exact decimal inches under a length.
   static String _readout(Quantity? value) {
@@ -208,6 +241,53 @@ class _MemoryBadge extends StatelessWidget {
             weight: FontWeight.w700,
             color: AppColors.tapeYellow,
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The tape graduations. Each result pulls the tape out 2 inches, like
+/// extending a real tape; AC lets it retract.
+class _ExtendingTape extends ConsumerStatefulWidget {
+  const _ExtendingTape();
+
+  static const pixelsPerInch = 28.0;
+
+  @override
+  ConsumerState<_ExtendingTape> createState() => _ExtendingTapeState();
+}
+
+class _ExtendingTapeState extends ConsumerState<_ExtendingTape> {
+  double _pulled = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    ref.listen(calcProvider, (previous, next) {
+      final newResult =
+          next.evaluation != null &&
+          !identical(next.evaluation, previous?.evaluation);
+      final cleared =
+          next.evaluation == null &&
+          next.tokens.isEmpty &&
+          (previous?.isEvaluated ?? false);
+      if (newResult) {
+        setState(() => _pulled += 2 * _ExtendingTape.pixelsPerInch);
+      } else if (cleared) {
+        setState(() => _pulled = 0);
+      }
+    });
+    final reduceMotion = MediaQuery.of(context).disableAnimations;
+    return TweenAnimationBuilder<double>(
+      tween: Tween(end: _pulled),
+      duration: reduceMotion
+          ? Duration.zero
+          : const Duration(milliseconds: 420),
+      curve: Curves.easeOutCubic,
+      builder: (_, shift, _) => CustomPaint(
+        painter: TapeTicksPainter(
+          pixelsPerInch: _ExtendingTape.pixelsPerInch,
+          shift: shift,
         ),
       ),
     );

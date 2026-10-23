@@ -43,27 +43,33 @@ class SettingsPanel extends ConsumerWidget {
           ),
         ),
         const _Section('Round lengths to the nearest'),
-        SegmentedButton<int>(
-          showSelectedIcon: false,
-          segments: [
-            for (final p in Settings.precisions)
-              ButtonSegment(
-                value: p,
-                label: StackedFraction(
-                  numerator: 1,
-                  denominator: p,
-                  style: AppText.style(
-                    20,
-                    weight: FontWeight.w600,
-                    color: p == s.precision
-                        ? AppColors.inkBlack
-                        : AppColors.chalkWhite,
+        MediaQuery.withClampedTextScaling(
+          maxScaleFactor: 1.3,
+          child: SegmentedButton<int>(
+            showSelectedIcon: false,
+            segments: [
+              for (final p in Settings.precisions)
+                ButtonSegment(
+                  value: p,
+                  label: FittedBox(
+                    child: StackedFraction(
+                      numerator: 1,
+                      denominator: p,
+                      style: AppText.style(
+                        20,
+                        weight: FontWeight.w600,
+                        color: p == s.precision
+                            ? AppColors.inkBlack
+                            : AppColors.chalkWhite,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-          ],
-          selected: {s.precision},
-          onSelectionChanged: (v) => set((s) => s.copyWith(precision: v.first)),
+            ],
+            selected: {s.precision},
+            onSelectionChanged: (v) =>
+                set((s) => s.copyWith(precision: v.first)),
+          ),
         ),
         const _Section('Show lengths as'),
         _Choices<LengthDisplay>(
@@ -175,7 +181,7 @@ class SettingsPanel extends ConsumerWidget {
             onPressed: () => _confirmReset(context, notifier),
             child: const Text(
               'Reset all settings',
-              style: TextStyle(color: AppColors.studRed),
+              style: TextStyle(color: AppColors.studRedOnDark),
             ),
           ),
         ),

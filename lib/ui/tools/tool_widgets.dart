@@ -66,10 +66,17 @@ class ToolScaffold extends ConsumerWidget {
               ],
             ),
           ),
-          if (form.editing) ...[
-            _SummaryBar(label: summaryLabel, value: summary),
-            ToolKeypad(tool: tool),
-          ],
+          // The keypad is a fixed layout, so its text grows only a little.
+          if (form.editing)
+            MediaQuery.withClampedTextScaling(
+              maxScaleFactor: 1.3,
+              child: Column(
+                children: [
+                  _SummaryBar(label: summaryLabel, value: summary),
+                  ToolKeypad(tool: tool),
+                ],
+              ),
+            ),
         ],
       ),
     );
@@ -159,8 +166,8 @@ class FieldRow extends ConsumerWidget {
         onTap: () => ref.read(toolFormProvider(tool).notifier).select(field),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 120),
-          height: 54,
-          padding: const EdgeInsets.symmetric(horizontal: 14),
+          constraints: const BoxConstraints(minHeight: 54),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           decoration: BoxDecoration(
             color: AppColors.keySteel,
             borderRadius: BorderRadius.circular(12),
@@ -171,16 +178,27 @@ class FieldRow extends ConsumerWidget {
           ),
           child: Row(
             children: [
-              Text(
-                field.label,
-                style: AppText.style(16, color: AppColors.chalkWhite),
+              Flexible(
+                flex: 3,
+                child: Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(text: field.label),
+                      if (hint.isNotEmpty)
+                        TextSpan(
+                          text: '  $hint',
+                          style: AppText.style(13, color: AppColors.chalkDim),
+                        ),
+                    ],
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppText.style(16, color: AppColors.chalkWhite),
+                ),
               ),
-              if (hint.isNotEmpty) ...[
-                const SizedBox(width: 6),
-                Text(hint, style: AppText.style(13, color: AppColors.chalkDim)),
-              ],
               const SizedBox(width: 12),
               Expanded(
+                flex: 2,
                 child: tokens.isEmpty
                     ? Text(
                         active ? '' : '—',
@@ -195,6 +213,7 @@ class FieldRow extends ConsumerWidget {
                           color: AppColors.chalkWhite,
                         ),
                         dimColor: AppColors.chalkDim,
+                        feetColor: AppColors.tapeYellow,
                       ),
               ),
               if (active)
@@ -409,7 +428,7 @@ class ResultCard extends StatelessWidget {
                       ),
                     ),
                   SizedBox(
-                    height: 52,
+                    height: MediaQuery.textScalerOf(context).scale(52),
                     child: MeasurementText(
                       headline!,
                       alignment: Alignment.centerLeft,
@@ -443,11 +462,17 @@ class ResultRow extends StatelessWidget {
     padding: const EdgeInsets.symmetric(vertical: 3),
     child: Row(
       children: [
-        Text(label, style: AppText.style(15, color: AppColors.inkDim)),
+        Flexible(
+          child: Text(
+            label,
+            maxLines: 2,
+            style: AppText.style(15, color: AppColors.inkDim),
+          ),
+        ),
         const SizedBox(width: 12),
         Expanded(
           child: SizedBox(
-            height: 26,
+            height: MediaQuery.textScalerOf(context).scale(26),
             child: MeasurementText(
               value,
               style: AppText.style(
@@ -480,7 +505,10 @@ class ChoiceBar<T> extends StatelessWidget {
   final ValueChanged<T> onSelected;
 
   @override
-  Widget build(BuildContext context) => SegmentedButton<T>(
+  Widget build(BuildContext context) =>
+      MediaQuery.withClampedTextScaling(maxScaleFactor: 1.3, child: _buttons());
+
+  Widget _buttons() => SegmentedButton<T>(
     showSelectedIcon: false,
     expandedInsets: EdgeInsets.zero,
     segments: [

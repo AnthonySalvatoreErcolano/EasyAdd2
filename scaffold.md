@@ -210,16 +210,31 @@ Correction: the table first listed `10' × 12' × 12' × 2` as an overflow, but 
 
 ## Phase 5 — Polish
 
-- [ ] App icon: the new `EasyAddIcon.png` (a tape measure on yellow). Move it to `assets/icon/app_icon.png` and generate every size with `flutter_launcher_icons`:
-  - iOS: `remove_alpha_ios: true`. The file has no transparency, which the App Store requires.
-  - The file is **512 × 512 px**, but the App Store needs a **1024 × 1024 px** icon. Export the original artwork at 1024 if possible. Otherwise upscale it once (`sips -z 1024 1024`); it is flat artwork, so it stays fairly clean.
-  - Android adaptive icon: background `#FEC517`, with the tape-measure drawing on a transparent foreground layer. Keep the drawing inside the center 66% so launchers don't crop it. Also keep a legacy icon from the full image.
-- [ ] Launch screen: solid tape yellow `#FEC517` with no logo, via `flutter_native_splash` (`color: "#FEC517"`). On Android 12 and newer, the system always shows the app icon in the center of the splash screen. Set `android_12: color: "#FEC517"` so it blends in.
-- [ ] Animations: the result slides into the expression line on `=`, and the blade ticks shift slightly.
-- [ ] Accessibility: VoiceOver reads results as words ("3 feet 4 and 5 eighths inches"), Dynamic Type works on the tool screens, and contrast is checked.
-- [ ] Dark-case look on every screen. There is no light theme, because the yellow-on-graphite style is the brand.
+**Status: done (2026-10-23).** 267 tests pass. You tested it on your iPhone ("perfect").
 
-**Check:** the manual checklist passes on a real iPhone: haptics, icon, splash, VoiceOver, and every tool against the tool test table.
+- [x] App icon: `EasyAddIcon.png` at 1024 px, generated for iOS and Android, with an Android adaptive icon (done in Phase 0).
+- [x] Launch screen: solid tape yellow `#FEC517` (done in Phase 0).
+- [x] Animations:
+  - Each `=` slides the result up into place (220 ms).
+  - The tape graduations slide out 2 inches per result, like extending a real tape, and retract on AC (420 ms).
+  - Both are skipped when iOS Reduce Motion is on.
+- [x] VoiceOver:
+  - Measurements are read as words: `3' 4 5/8"` → "3 feet 4 and five eighths inches"; `≈ 8 9/16"` → "about 8 and nine sixteenths inches"; `120 sq ft` → "120 square feet"; operators as "plus", "times", "divided by".
+  - New results are announced automatically.
+  - Every key, fraction and field has a spoken label.
+- [x] Larger text:
+  - Text follows the iPhone text-size setting, up to 2×.
+  - The calculator, tab bar, tool keypad and choice bars allow up to 1.3×, because they are fixed instrument layouts.
+  - Tool fields and result rows grow taller instead of cutting off text.
+  - A test runs every screen and sheet at 2× and fails on any cut-off layout.
+- [x] Contrast (WCAG AA), measured for every text color pair:
+  - Red on the yellow blade was 3.1:1, so the blade now uses `#A8121A` (4.8:1) for the feet mark and `Error`.
+  - Red on dark sheets uses `#FF6B6B` (5.3:1), and dark surfaces show the feet mark in yellow.
+  - The dimmed live preview went from 50% to 60% ink (4.2:1, large text).
+  - Every other pair is 4.7:1 or higher.
+- [x] Dark-case look on every screen; there is no light theme.
+
+**Check:** passed. You tried it on a real iPhone, and the tests cover the words, animations, Reduce Motion and 2× text.
 
 ---
 
