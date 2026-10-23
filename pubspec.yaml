@@ -13,15 +13,6 @@ dependencies:
     sdk: flutter
   flutter_riverpod: ^3.3.2
   shared_preferences: ^2.5.6
-  home_widget: ^0.10.0
-
-# path_provider_foundation 2.6+ (pulled in by home_widget) ships a native
-# asset framework (objective_c.framework) that Flutter 3.41 does not sign
-# with the team identity on iOS, so installs on a device fail with
-# "invalid signature". 2.5.1 is the newest version without it. Remove this
-# override after a Flutter upgrade that signs native assets on iOS.
-dependency_overrides:
-  path_provider_foundation: 2.5.1
 
 dev_dependencies:
   flutter_test:

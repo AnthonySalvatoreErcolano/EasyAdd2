@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,7 +10,10 @@ import 'data/prefs_repository.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  // Phones stay in portrait. iPads rotate freely, as the App Store expects.
+  if (_isPhone()) {
+    await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  }
   final prefs = await SharedPreferences.getInstance();
   runApp(
     ProviderScope(
@@ -18,4 +23,10 @@ Future<void> main() async {
       child: const EasyAddApp(),
     ),
   );
+}
+
+bool _isPhone() {
+  final view = PlatformDispatcher.instance.views.first;
+  final shortest = view.physicalSize.shortestSide / view.devicePixelRatio;
+  return shortest < 600;
 }

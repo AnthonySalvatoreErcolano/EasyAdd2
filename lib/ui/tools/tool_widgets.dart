@@ -50,37 +50,59 @@ class ToolScaffold extends ConsumerWidget {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
-              children: [
-                if (choices != null) ...[choices!, const SizedBox(height: 12)],
-                for (final field in form.fields) ...[
-                  FieldRow(tool: tool, field: field),
-                  const SizedBox(height: 8),
-                ],
-                const SizedBox(height: 8),
-                result,
-              ],
-            ),
-          ),
-          // The keypad is a fixed layout, so its text grows only a little.
-          if (form.editing)
-            MediaQuery.withClampedTextScaling(
-              maxScaleFactor: 1.3,
-              child: Column(
+      body: ReadableWidth(
+        child: Column(
+          children: [
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
                 children: [
-                  _SummaryBar(label: summaryLabel, value: summary),
-                  ToolKeypad(tool: tool),
+                  if (choices != null) ...[
+                    choices!,
+                    const SizedBox(height: 12),
+                  ],
+                  for (final field in form.fields) ...[
+                    FieldRow(tool: tool, field: field),
+                    const SizedBox(height: 8),
+                  ],
+                  const SizedBox(height: 8),
+                  result,
                 ],
               ),
             ),
-        ],
+            // The keypad is a fixed layout, so its text grows only a little.
+            if (form.editing)
+              MediaQuery.withClampedTextScaling(
+                maxScaleFactor: 1.3,
+                child: Column(
+                  children: [
+                    _SummaryBar(label: summaryLabel, value: summary),
+                    ToolKeypad(tool: tool),
+                  ],
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
+}
+
+/// Keeps content to a comfortable reading width on iPad, centered.
+class ReadableWidth extends StatelessWidget {
+  const ReadableWidth({super.key, required this.child});
+
+  static const maxWidth = 640.0;
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => Center(
+    child: ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: maxWidth),
+      child: child,
+    ),
+  );
 }
 
 class _SummaryBar extends StatelessWidget {
@@ -176,54 +198,51 @@ class FieldRow extends ConsumerWidget {
               width: 2,
             ),
           ),
-          child: Row(
-            children: [
-              Flexible(
-                flex: 3,
-                child: Text.rich(
-                  TextSpan(
-                    children: [
-                      TextSpan(text: field.label),
-                      if (hint.isNotEmpty)
-                        TextSpan(
-                          text: '  $hint',
-                          style: AppText.style(13, color: AppColors.chalkDim),
+          child: LabelValueRow(
+            label: Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(text: field.label),
+                  if (hint.isNotEmpty)
+                    TextSpan(
+                      text: '  $hint',
+                      style: AppText.style(13, color: AppColors.chalkDim),
+                    ),
+                ],
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: AppText.style(16, color: AppColors.chalkWhite),
+            ),
+            value: Row(
+              children: [
+                Expanded(
+                  child: tokens.isEmpty
+                      ? Text(
+                          active ? '' : '—',
+                          textAlign: TextAlign.right,
+                          style: AppText.style(20, color: AppColors.chalkDim),
+                        )
+                      : MeasurementText(
+                          segments,
+                          style: AppText.style(
+                            22,
+                            weight: FontWeight.w600,
+                            color: AppColors.chalkWhite,
+                          ),
+                          dimColor: AppColors.chalkDim,
+                          feetColor: AppColors.tapeYellow,
                         ),
-                    ],
+                ),
+                if (active)
+                  Container(
+                    width: 2,
+                    height: 26,
+                    margin: const EdgeInsets.only(left: 3),
+                    color: AppColors.tapeYellow,
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppText.style(16, color: AppColors.chalkWhite),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                flex: 2,
-                child: tokens.isEmpty
-                    ? Text(
-                        active ? '' : '—',
-                        textAlign: TextAlign.right,
-                        style: AppText.style(20, color: AppColors.chalkDim),
-                      )
-                    : MeasurementText(
-                        segments,
-                        style: AppText.style(
-                          22,
-                          weight: FontWeight.w600,
-                          color: AppColors.chalkWhite,
-                        ),
-                        dimColor: AppColors.chalkDim,
-                        feetColor: AppColors.tapeYellow,
-                      ),
-              ),
-              if (active)
-                Container(
-                  width: 2,
-                  height: 26,
-                  margin: const EdgeInsets.only(left: 3),
-                  color: AppColors.tapeYellow,
-                ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -460,30 +479,47 @@ class ResultRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 3),
-    child: Row(
-      children: [
-        Flexible(
-          child: Text(
-            label,
-            maxLines: 2,
-            style: AppText.style(15, color: AppColors.inkDim),
+    child: LabelValueRow(
+      label: Text(
+        label,
+        maxLines: 2,
+        style: AppText.style(15, color: AppColors.inkDim),
+      ),
+      value: SizedBox(
+        height: MediaQuery.textScalerOf(context).scale(26),
+        child: MeasurementText(
+          value,
+          style: AppText.style(
+            20,
+            weight: FontWeight.w700,
+            color: AppColors.inkBlack,
           ),
+          dimColor: AppColors.inkDim,
+        ),
+      ),
+    ),
+  );
+}
+
+/// A label on the left and a value filling the rest of the row, right
+/// aligned. The label takes what it needs, up to 60% of the row, and wraps
+/// beyond that (large text sizes).
+class LabelValueRow extends StatelessWidget {
+  const LabelValueRow({super.key, required this.label, required this.value});
+
+  final Widget label;
+  final Widget value;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) => Row(
+      children: [
+        ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: constraints.maxWidth * 0.6),
+          child: label,
         ),
         const SizedBox(width: 12),
-        Expanded(
-          child: SizedBox(
-            height: MediaQuery.textScalerOf(context).scale(26),
-            child: MeasurementText(
-              value,
-              style: AppText.style(
-                20,
-                weight: FontWeight.w700,
-                color: AppColors.inkBlack,
-              ),
-              dimColor: AppColors.inkDim,
-            ),
-          ),
-        ),
+        Expanded(child: value),
       ],
     ),
   );

@@ -6,6 +6,7 @@ import 'board_feet_screen.dart';
 import 'concrete_screen.dart';
 import 'convert_screen.dart';
 import 'stairs_screen.dart';
+import 'tool_widgets.dart';
 
 class ToolsScreen extends StatelessWidget {
   const ToolsScreen({super.key});
@@ -16,45 +17,47 @@ class ToolsScreen extends StatelessWidget {
       context,
     ).push(MaterialPageRoute<void>(builder: (_) => screen));
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(4, 8, 4, 16),
-          child: Text(
-            'Tools',
-            style: AppText.style(
-              30,
-              weight: FontWeight.w700,
-              color: AppColors.chalkWhite,
+    return ReadableWidth(
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 8, 4, 16),
+            child: Text(
+              'Tools',
+              style: AppText.style(
+                30,
+                weight: FontWeight.w700,
+                color: AppColors.chalkWhite,
+              ),
             ),
           ),
-        ),
-        _ToolCard(
-          icon: Icons.foundation,
-          title: 'Concrete',
-          subtitle: 'Yards and bags for slabs, footings and columns',
-          onTap: () => open(const ConcreteScreen()),
-        ),
-        _ToolCard(
-          icon: Icons.stairs_outlined,
-          title: 'Stairs',
-          subtitle: 'Risers, treads, run and stringer length',
-          onTap: () => open(const StairsScreen()),
-        ),
-        _ToolCard(
-          icon: Icons.carpenter,
-          title: 'Board Feet',
-          subtitle: 'Lumber volume and cost',
-          onTap: () => open(const BoardFeetScreen()),
-        ),
-        _ToolCard(
-          icon: Icons.straighten,
-          title: 'Convert',
-          subtitle: 'Feet, inches, decimal feet and metric',
-          onTap: () => open(const ConvertScreen()),
-        ),
-      ],
+          _ToolCard(
+            icon: Icons.foundation,
+            title: 'Concrete',
+            subtitle: 'Yards and bags for slabs, footings and columns',
+            onTap: () => open(const ConcreteScreen()),
+          ),
+          _ToolCard(
+            icon: Icons.stairs_outlined,
+            title: 'Stairs',
+            subtitle: 'Risers, treads, run and stringer length',
+            onTap: () => open(const StairsScreen()),
+          ),
+          _ToolCard(
+            icon: Icons.carpenter,
+            title: 'Board Feet',
+            subtitle: 'Lumber volume and cost',
+            onTap: () => open(const BoardFeetScreen()),
+          ),
+          _ToolCard(
+            icon: Icons.straighten,
+            title: 'Convert',
+            subtitle: 'Feet, inches, decimal feet and metric',
+            onTap: () => open(const ConvertScreen()),
+          ),
+        ],
+      ),
     );
   }
 }

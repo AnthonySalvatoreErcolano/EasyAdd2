@@ -59,4 +59,13 @@ void main() {
     'iPad with history',
     (t) => shot(t, 'calc_ipad', '2\' + 3" = = 8\' ÷ 3 =', size: iPadPro13),
   );
+  testWidgets(
+    'iPad landscape',
+    (t) => shot(
+      t,
+      'calc_ipad_landscape',
+      '2\' + 3" = = 8\' ÷ 3 =',
+      size: const Size(1376, 1032),
+    ),
+  );
 }

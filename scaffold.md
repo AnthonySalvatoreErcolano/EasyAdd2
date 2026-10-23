@@ -32,7 +32,7 @@ The fuller design rationale is in the plan doc: https://claude.ai/artifact/MxmoZ
 3. **Metric conversion.** Enter mm, cm or m and mix them with imperial units. Any result can be shown in metric. Conversion is exact: 1 in = 25.4 mm.
 4. **Stair stringer tool.** Total rise (plus optional run or tread depth) gives the riser count, riser height, tread count, total run, the diagonal and the angle, with a check against code limits.
 5. **Board-foot tool.** Thickness × width × length × quantity gives board feet and an optional total price.
-6. **Home-screen widget.** The last result and recent history on the home screen, with taps that open the app or a tool.
+6. **Home-screen widget** (moved to 2.1). The last result and recent history on the home screen, with taps that open the app or a tool.
 
 ---
 
@@ -238,7 +238,9 @@ Correction: the table first listed `10' × 12' × 12' × 2` as an overflow, but 
 
 ---
 
-## Phase 6 — Home-screen widget (iOS)
+## Phase 6 — Home-screen widget (iOS) — moved to 2.1
+
+**Decision (2026-10-23):** skipped for 2.0 so the app can ship sooner; it comes in a 2.1 update. The `home_widget` package was removed until then (it also pulled in a framework that Flutter 3.41 signs incorrectly). Re-add `home_widget` when this phase starts, and check that `objective_c.framework` is signed with the team or pin `path_provider_foundation` to 2.5.1.
 
 A widget can't host a full keypad, so it shows results and opens the app quickly.
 
@@ -259,11 +261,17 @@ A widget can't host a full keypad, so it shows results and opens the app quickly
 
 ## Phase 7 — Ship 2.0.0
 
-- [ ] Signing: the same Apple team as the old archives, with automatic signing for Runner and EasyAddWidget. The MAUI `ConstructionCalculator_Profile.mobileprovision` is not needed.
-- [ ] `flutter build ipa --release`, then upload through Xcode Organizer or Transporter.
-- [ ] TestFlight: at least a week of internal job-site use.
-- [ ] App Store Connect: rename the listing to EasyAdd if it isn't already. Add new screenshots (6.9" and 6.5" iPhone, 13" iPad), What's New text covering the rebuild and the new tools, an updated keyword list, and a privacy label (no data collected).
-- [ ] Submit 2.0.0 (10) for review.
+**Status: in progress (2026-10-23).** The App Store build is ready; the remaining steps happen in App Store Connect.
+
+- [x] iPad: rotates in all orientations (iPhone stays portrait). Tool screens keep a 640 pt reading width on iPad.
+- [x] `ITSAppUsesNonExemptEncryption = NO` in Info.plist, so no export-compliance question on upload.
+- [x] Signing: the Apple Distribution certificate already on this Mac (the one used for 1.1.1), with automatic signing for team Q8RM4HVFXM.
+- [x] `flutter build ipa --release` → `build/ios/ipa/EasyAdd.ipa` (20 MB): version 2.0.0, build 10, App Store provisioning profile, `get-task-allow` false.
+- [x] Store listing text, keywords and What's New: `store/app_store_listing.md`. Privacy policy: `PRIVACY.md`.
+- [x] Screenshots, six per size, generated from the real app (`test/store/`): `store/screenshots/iphone-6.9` (1320 × 2868), `iphone-6.5` (1242 × 2688), `ipad-13` (2064 × 2752).
+- [ ] **You:** upload the IPA with Transporter (or Xcode → Organizer → Distribute App).
+- [ ] **You:** TestFlight: install from TestFlight and use it on the job for a few days.
+- [ ] **You:** App Store Connect: create version 2.0.0, paste the listing text, upload screenshots, set App Privacy to "Data Not Collected", pick build 10, and submit for review.
 - [ ] Tag `v2.0.0` in git after approval.
 
 ---
