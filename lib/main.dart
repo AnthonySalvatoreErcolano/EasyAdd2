@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app.dart';
 import 'data/prefs_repository.dart';
+import 'demo.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,14 +14,18 @@ Future<void> main() async {
     await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   }
   final prefs = await SharedPreferences.getInstance();
-  runApp(
-    ProviderScope(
-      overrides: [
-        prefsRepositoryProvider.overrideWithValue(PrefsRepository(prefs)),
-      ],
-      child: const EasyAddApp(),
-    ),
+  final scene = demoScene();
+  if (scene != null) await prefs.clear(); // screenshots start clean
+
+  final container = ProviderContainer(
+    overrides: [
+      prefsRepositoryProvider.overrideWithValue(PrefsRepository(prefs)),
+    ],
   );
+  runApp(
+    UncontrolledProviderScope(container: container, child: const EasyAddApp()),
+  );
+  if (scene != null) runDemoScene(scene, container);
 }
 
 bool _isPhone() {

@@ -84,7 +84,7 @@ class EasyAddApp extends StatelessWidget {
       // Text grows with the system size, up to 2× so layouts stay usable.
       builder: (context, child) =>
           MediaQuery.withClampedTextScaling(maxScaleFactor: 2, child: child!),
-      home: const HomeShell(),
+      home: HomeShell(key: HomeShell.globalKey),
     );
   }
 }

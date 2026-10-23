@@ -9,13 +9,24 @@ import 'tools/tools_screen.dart';
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
 
+  /// Lets screenshot mode open a tool without taps.
+  static final globalKey = GlobalKey<HomeShellState>();
+
   @override
-  State<HomeShell> createState() => _HomeShellState();
+  State<HomeShell> createState() => HomeShellState();
 }
 
-class _HomeShellState extends State<HomeShell> {
+class HomeShellState extends State<HomeShell> {
   int _tab = 0;
   final _toolsNavigator = GlobalKey<NavigatorState>();
+
+  /// Switches to the Tools tab and opens [screen].
+  void openTool(Widget screen) {
+    setState(() => _tab = 1);
+    _toolsNavigator.currentState?.push(
+      MaterialPageRoute<void>(builder: (_) => screen),
+    );
+  }
 
   void _select(int tab) {
     if (tab == _tab && tab == 1) {
