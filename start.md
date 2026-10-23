@@ -14,4 +14,6 @@ EasyAdd
 
 Currently, it's a litle clumsy and doesn't actually work. I'd like a complete  UI overhaul to make it look sleek. 
 
+We will be using flutter. 
+
 Please outline a scaffold document as to the plan to rebuild this to work. 
